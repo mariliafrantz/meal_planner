@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>February Meal Plan - Brazilian Cuisine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .weekday-header {
+            background: #667eea;
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .day-card {
+            background: linear-gradient(135deg, #f6f8fb 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .day-card.skip-day {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            cursor: default;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .day-card.skip-day:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: #cbd5e0;
+        }
+        
+        .day-card.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+            min-height: 0;
+        }
+        
+        .day-card.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+        
+        .day-label {
+            font-size: 0.75em;
+            color: #718096;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+        
+        .meal-name {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            flex-grow: 1;
+            line-height: 1.3;
+        }
+        
+        .skip-label {
+            color: #a0aec0;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        .view-recipe {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s;
+            width: 100%;
+            font-weight: 600;
+            margin-top: auto;
+        }
+        
+        .view-recipe:hover {
+            background: #38a169;
+        }
+        
+        @media (max-width: 1200px) {
+            .calendar {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 8px;
+            }
+            
+            .day-card {
+                padding: 10px;
+                min-height: 150px;
+            }
+            
+            .meal-name {
+                font-size: 0.85em;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .calendar {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .weekday-header {
+                display: none;
+            }
+            
+            .day-card {
+                min-height: auto;
+            }
+            
+            .day-card.empty {
+                display: none;
+            }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .close-btn:hover {
+            background: #c53030;
+        }
+        
+        .recipe-title {
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-right: 40px;
+        }
+        
+        .recipe-section {
+            margin-bottom: 20px;
+        }
+        
+        .recipe-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .recipe-section ul {
+            list-style-position: inside;
+            color: #4a5568;
+            line-height: 1.8;
+        }
+        
+        .recipe-section ol {
+            list-style-position: inside;
+            color: #4a5568;
+            line-height: 1.8;
+            padding-left: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇧🇷 February Meal Plan</h1>
+        <p class="subtitle">Brazilian-Inspired Dinners (Skipping Thursdays & Sundays)</p>
+        
+        <div class="calendar" id="calendar"></div>
+    </div>
+    
+    <div class="modal" id="recipeModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div id="recipeContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const meals = [
+            {
+                date: 2,
+                day: "Sunday",
+                name: "Omelete Recheado com Salada",
+                ingredients: [
+                    "6 ovos",
+                    "100g presunto picado",
+                    "100g queijo ralado",
+                    "1 tomate picado",
+                    "Cebolinha",
+                    "Sal e pimenta",
+                    "Alface, tomate, pepino para salada",
+                    "Azeite e limão"
+                ],
+                instructions: [
+                    "Bata os ovos com sal e pimenta",
+                    "Em frigideira untada, despeje metade dos ovos",
+                    "Quando começar a firmar, adicione presunto, queijo e tomate",
+                    "Dobre ao meio e cozinhe por 2 min cada lado",
+                    "Repita com o restante. Tempo total: 15 min",
+                    "Monte a salada e sirva junto"
+                ]
+            },
+            {
+                date: 1,
+                day: "Saturday",
+                name: "Picanha com Farofa e Vinagrete",
+                ingredients: [
+                    "1kg picanha",
+                    "Sal grosso",
+                    "2 xícaras farinha de mandioca",
+                    "100g bacon picado",
+                    "2 ovos",
+                    "Cheiro verde",
+                    "3 tomates picados",
+                    "1 cebola roxa picada",
+                    "1 pimentão verde picado",
+                    "Suco de 2 limões",
+                    "Azeite, sal, pimenta"
+                ],
+                instructions: [
+                    "Tempere a picanha com sal grosso generosamente",
+                    "Grelhe na churrasqueira ou frigideira bem quente, 6-7 minutos cada lado",
+                    "Farofa: Frite o bacon, adicione a farinha aos poucos mexendo sempre",
+                    "Adicione ovos mexidos e cheiro verde à farofa",
+                    "Vinagrete: Misture tomate, cebola, pimentão, limão, azeite, sal e pimenta",
+                    "Deixe descansar a carne 5 minutos antes de fatiar"
+                ]
+            },
+            {
+                date: 3,
+                day: "Monday",
+                name: "Moqueca de Peixe Baiana",
+                ingredients: [
+                    "800g filé de peixe branco (badejo ou tilápia)",
+                    "1 cebola em rodelas",
+                    "2 tomates em rodelas",
+                    "1 pimentão vermelho em tiras",
+                    "200ml leite de coco",
+                    "3 colheres de azeite de dendê",
+                    "Suco de 1 limão",
+                    "Coentro fresco",
+                    "2 dentes de alho",
+                    "Sal e pimenta"
+                ],
+                instructions: [
+                    "Tempere o peixe com limão, alho, sal e pimenta por 20 minutos",
+                    "Em panela de barro, faça camadas: cebola, tomate, pimentão, peixe",
+                    "Repita as camadas até acabar os ingredientes",
+                    "Adicione leite de coco e azeite de dendê",
+                    "Cozinhe em fogo baixo por 20-25 minutos sem mexer muito",
+                    "Finalize com coentro fresco e sirva com arroz branco"
+                ]
+            },
+            {
+                date: 4,
+                day: "Tuesday",
+                name: "Arroz de Forno Rápido",
+                ingredients: [
+                    "3 xícaras arroz cozido (sobra ou instantâneo)",
+                    "200g frango desfiado (rotisserie)",
+                    "1 lata milho verde",
+                    "200g requeijão",
+                    "150g mussarela ralada",
+                    "1 tomate picado",
+                    "Temperos a gosto"
+                ],
+                instructions: [
+                    "Misture arroz, frango, milho, requeijão e tomate",
+                    "Coloque em refratário",
+                    "Cubra com mussarela",
+                    "Leve ao micro-ondas por 8 min ou forno por 15 min",
+                    "Tempo total: 20 min",
+                    "Sirva quente"
+                ]
+            },
+            {
+                date: 5,
+                day: "Wednesday",
+                name: "Bobó de Camarão",
+                ingredients: [
+                    "500g camarão médio limpo",
+                    "500g mandioca (aipim)",
+                    "200ml leite de coco",
+                    "1 cebola picada",
+                    "3 tomates picados",
+                    "4 dentes de alho",
+                    "Azeite de dendê",
+                    "Coentro e cebolinha",
+                    "Pimenta malagueta",
+                    "Sal e limão"
+                ],
+                instructions: [
+                    "Cozinhe a mandioca até ficar macia, depois amasse até virar purê",
+                    "Tempere o camarão com alho, sal e limão",
+                    "Refogue cebola, alho e tomate até formar um molho",
+                    "Adicione o purê de mandioca e leite de coco, misture bem",
+                    "Junte os camarões e cozinhe por 5 minutos",
+                    "Finalize com dendê, coentro e pimenta. Sirva com arroz branco"
+                ]
+            },
+            {
+                date: 7,
+                day: "Friday",
+                name: "Escondidinho de Carne Seca",
+                ingredients: [
+                    "500g carne seca dessalgada e desfiada",
+                    "1kg mandioca cozida",
+                    "200g requeijão cremoso",
+                    "1 cebola picada",
+                    "2 tomates picados",
+                    "2 dentes de alho",
+                    "200g queijo mussarela ralado",
+                    "Leite, manteiga",
+                    "Cheiro verde"
+                ],
+                instructions: [
+                    "Cozinhe e desfie a carne seca (dessalgue bem antes)",
+                    "Refogue alho, cebola, tomate e adicione a carne. Cozinhe 10 min",
+                    "Faça purê com a mandioca, manteiga, leite e requeijão",
+                    "Em refratário, coloque metade do purê, a carne, e cubra com o resto do purê",
+                    "Cubra com queijo mussarela",
+                    "Asse a 200°C por 25-30 minutos até gratinar"
+                ]
+            },
+            {
+                date: 8,
+                day: "Saturday",
+                name: "Sanduíche Natural Completo",
+                ingredients: [
+                    "8 fatias pão de forma integral",
+                    "200g peito de peru",
+                    "150g queijo branco",
+                    "2 tomates fatiados",
+                    "Alface",
+                    "1 cenoura ralada",
+                    "Maionese ou requeijão",
+                    "Mostarda (opcional)"
+                ],
+                instructions: [
+                    "Passe maionese ou requeijão no pão",
+                    "Monte camadas: alface, peru, queijo, tomate, cenoura",
+                    "Feche e corte ao meio",
+                    "Sirva com batata chips ou palitos de cenoura",
+                    "Tempo total: 10 min",
+                    "Opção: torre o pão antes de montar"
+                ]
+            },
+            {
+                date: 9,
+                day: "Sunday",
+                name: "Lasanha à Bolonhesa",
+                ingredients: [
+                    "500g carne moída",
+                    "1 cebola picada",
+                    "4 dentes de alho",
+                    "500ml molho de tomate",
+                    "300g massa de lasanha",
+                    "500ml molho branco (bechamel)",
+                    "200g queijo mussarela ralado",
+                    "Parmesão ralado",
+                    "Manjericão",
+                    "Azeite"
+                ],
+                instructions: [
+                    "Refogue cebola e alho, adicione a carne moída e cozinhe bem",
+                    "Adicione molho de tomate e manjericão, cozinhe por 20 min",
+                    "Molho branco: Derreta manteiga, adicione farinha, depois leite aos poucos mexendo",
+                    "Em refratário, alterne camadas: molho bolonhesa, massa, molho branco, queijo",
+                    "Repita as camadas e finalize com queijo mussarela e parmesão",
+                    "Asse a 180°C por 35-40 minutos até gratinar"
+                ]
+            },
+            {
+                date: 10,
+                day: "Monday",
+                name: "Costelinha com Mandioca",
+                ingredients: [
+                    "1kg costela suína em tiras",
+                    "800g mandioca em pedaços",
+                    "2 cebolas em rodelas",
+                    "4 dentes de alho",
+                    "2 folhas de louro",
+                    "1 xícara molho de tomate",
+                    "Cerveja ou vinho branco",
+                    "Orégano, sal, pimenta",
+                    "Cheiro verde"
+                ],
+                instructions: [
+                    "Tempere a costela com alho, sal, pimenta e orégano",
+                    "Em panela de pressão, doure a costela com pouca gordura",
+                    "Adicione cebola, louro, molho de tomate e 1/2 xícara de cerveja",
+                    "Cozinhe na pressão por 25 minutos",
+                    "Retire a pressão, adicione a mandioca e mais água se necessário",
+                    "Cozinhe sem pressão até a mandioca amolecer (15 min). Finalize com cheiro verde"
+                ]
+            },
+            {
+                date: 11,
+                day: "Tuesday",
+                name: "Panqueca de Frango Pronta",
+                ingredients: [
+                    "8 discos de panqueca prontos",
+                    "300g frango desfiado (rotisserie)",
+                    "1 lata molho de tomate",
+                    "1 cebola picada",
+                    "2 dentes alho",
+                    "200g mussarela ralada",
+                    "Sal, orégano"
+                ],
+                instructions: [
+                    "Refogue cebola e alho, adicione frango e metade do molho (5 min)",
+                    "Recheie as panquecas prontas com o frango",
+                    "Coloque em refratário, cubra com resto do molho e queijo",
+                    "Leve ao micro-ondas 6 min ou forno 12 min a 200°C",
+                    "Tempo total: 25 min",
+                    "Sirva quente"
+                ]
+            },
+            {
+                date: 12,
+                day: "Wednesday",
+                name: "Arroz de Carreteiro",
+                ingredients: [
+                    "500g carne seca ou charque",
+                    "2 xícaras arroz",
+                    "2 tomates picados",
+                    "1 cebola picada",
+                    "3 dentes de alho",
+                    "1 pimentão verde",
+                    "Cebolinha e salsinha",
+                    "Cominho",
+                    "Sal e pimenta"
+                ],
+                instructions: [
+                    "Dessalgue e cozinhe a carne seca, depois desfie",
+                    "Refogue alho, cebola, tomate e pimentão",
+                    "Adicione a carne desfiada e refogue bem",
+                    "Adicione o arroz e refogue por 2 minutos",
+                    "Coloque água (2:1) e cominho, cozinhe até secar",
+                    "Finalize com cebolinha e salsinha picadas"
+                ]
+            },
+            {
+                date: 14,
+                day: "Friday",
+                name: "Espaguete Alho e Óleo",
+                ingredients: [
+                    "500g espaguete",
+                    "8 dentes de alho fatiados",
+                    "150ml azeite extra virgem",
+                    "Pimenta calabresa",
+                    "Parmesão ralado",
+                    "Salsinha fresca",
+                    "Sal"
+                ],
+                instructions: [
+                    "Cozinhe o espaguete em água com sal (10 min)",
+                    "Enquanto isso, doure o alho no azeite em fogo baixo (3 min)",
+                    "Adicione pimenta calabresa ao azeite",
+                    "Escorra a massa reservando 1 xícara da água do cozimento",
+                    "Misture massa, azeite com alho e um pouco da água",
+                    "Finalize com parmesão e salsinha. Tempo total: 15 min"
+                ]
+            },
+            {
+                date: 15,
+                day: "Saturday",
+                name: "Wrap de Frango Grelhado",
+                ingredients: [
+                    "4 tortillas grandes",
+                    "400g peito de frango em tiras",
+                    "1 pimentão em tiras",
+                    "1 cebola em tiras",
+                    "Alface picada",
+                    "2 tomates picados",
+                    "Molho ranch ou maionese temperada",
+                    "Sal, páprica, cominho"
+                ],
+                instructions: [
+                    "Tempere o frango com sal, páprica e cominho",
+                    "Grelhe o frango com pimentão e cebola por 8 min",
+                    "Aqueça as tortillas por 30 seg",
+                    "Monte: tortilla, molho, alface, tomate, frango grelhado",
+                    "Enrole bem apertado",
+                    "Tempo total: 15 min. Sirva com batatas fritas"
+                ]
+            },
+            {
+                date: 16,
+                day: "Sunday",
+                name: "Macarrão ao Molho Alfredo com Frango",
+                ingredients: [
+                    "500g peito de frango em tiras",
+                    "400g macarrão penne ou fettuccine",
+                    "200ml creme de leite",
+                    "100g manteiga",
+                    "150g parmesão ralado",
+                    "3 dentes de alho",
+                    "Noz-moscada",
+                    "Sal e pimenta",
+                    "Salsinha"
+                ],
+                instructions: [
+                    "Cozinhe o macarrão al dente conforme embalagem",
+                    "Tempere o frango e grelhe até dourar. Reserve",
+                    "Na mesma panela, derreta a manteiga e refogue o alho",
+                    "Adicione o creme de leite e deixe ferver levemente",
+                    "Adicione o parmesão aos poucos, mexendo até derreter",
+                    "Misture o macarrão, frango, noz-moscada. Finalize com salsinha"
+                ]
+            },
+            {
+                date: 17,
+                day: "Monday",
+                name: "Atum Selado com Salada",
+                ingredients: [
+                    "4 postas de atum fresco",
+                    "Gergelim preto e branco",
+                    "Molho shoyu",
+                    "Azeite",
+                    "Mix de folhas",
+                    "Tomate cereja",
+                    "Molho para salada",
+                    "Sal e pimenta"
+                ],
+                instructions: [
+                    "Passe o atum no shoyu e cubra com gergelim",
+                    "Em frigideira muito quente, sele cada lado por 1 min (deixe cru no meio)",
+                    "Corte em fatias",
+                    "Monte a salada com folhas e tomate cereja",
+                    "Coloque o atum por cima",
+                    "Tempo total: 12 min. Regue com azeite e sirva"
+                ]
+            },
+            {
+                date: 18,
+                day: "Tuesday",
+                name: "Carne de Panela com Aipim",
+                ingredients: [
+                    "1kg músculo ou patinho",
+                    "800g aipim (mandioca)",
+                    "2 cebolas em rodelas",
+                    "4 dentes de alho",
+                    "2 tomates",
+                    "1 pimentão",
+                    "2 folhas de louro",
+                    "Cerveja ou vinho tinto",
+                    "Colorau",
+                    "Cheiro verde"
+                ],
+                instructions: [
+                    "Tempere a carne com alho, sal, pimenta e colorau",
+                    "Em panela de pressão, doure a carne em todos os lados",
+                    "Adicione cebola, tomate, pimentão, louro e 1 xícara de cerveja",
+                    "Cozinhe na pressão por 40 minutos",
+                    "Retire a pressão, adicione o aipim em pedaços",
+                    "Cozinhe sem pressão até o aipim amolecer. Finalize com cheiro verde"
+                ]
+            },
+            {
+                date: 19,
+                day: "Wednesday",
+                name: "Risoto de Camarão Brasileiro",
+                ingredients: [
+                    "400g camarão médio",
+                    "2 xícaras arroz arbóreo",
+                    "1 litro caldo de peixe ou legumes",
+                    "1/2 xícara vinho branco",
+                    "1 cebola picada",
+                    "3 dentes de alho",
+                    "100g manteiga",
+                    "Parmesão ralado",
+                    "Açafrão ou colorau",
+                    "Cheiro verde"
+                ],
+                instructions: [
+                    "Refogue os camarões levemente e reserve",
+                    "Na mesma panela, refogue cebola e alho na manteiga",
+                    "Adicione o arroz e refogue por 2 minutos",
+                    "Adicione o vinho e deixe evaporar",
+                    "Vá adicionando o caldo quente aos poucos, mexendo sempre",
+                    "Quando al dente, adicione camarões, parmesão e cheiro verde"
+                ]
+            },
+            {
+                date: 21,
+                day: "Friday",
+                name: "Galinhada Mineira",
+                ingredients: [
+                    "1 frango inteiro cortado",
+                    "2 xícaras arroz",
+                    "2 tomates picados",
+                    "1 cebola picada",
+                    "4 dentes de alho",
+                    "1 pimentão verde",
+                    "Açafrão ou colorau",
+                    "Cheiro verde",
+                    "Pimenta de cheiro",
+                    "Louro"
+                ],
+                instructions: [
+                    "Tempere o frango com alho, sal e limão",
+                    "Em panela grande, doure o frango em todos os lados",
+                    "Adicione cebola, alho, tomate, pimentão e refogue",
+                    "Adicione água (4 xícaras), açafrão e louro. Cozinhe até o frango ficar macio",
+                    "Adicione o arroz e cozinhe até secar, mexendo ocasionalmente",
+                    "Finalize com cheiro verde e pimenta de cheiro"
+                ]
+            },
+            {
+                date: 22,
+                day: "Saturday",
+                name: "Coxão Mole ao Molho Madeira",
+                ingredients: [
+                    "1kg coxão mole em bifes",
+                    "200ml vinho Madeira (ou vinho do Porto)",
+                    "200ml creme de leite",
+                    "200g champignon fatiado",
+                    "2 cebolas em rodelas",
+                    "4 dentes de alho",
+                    "Manteiga",
+                    "Farinha de trigo",
+                    "Caldo de carne",
+                    "Sal e pimenta"
+                ],
+                instructions: [
+                    "Tempere os bifes e passe levemente na farinha",
+                    "Doure na manteiga e reserve",
+                    "Na mesma panela, refogue cebola, alho e champignon",
+                    "Adicione o vinho Madeira e deixe reduzir pela metade",
+                    "Adicione caldo de carne e creme de leite",
+                    "Retorne os bifes ao molho e cozinhe por 10 min. Sirva com arroz ou purê"
+                ]
+            },
+            {
+                date: 23,
+                day: "Sunday",
+                name: "Quesadilla de Frango",
+                ingredients: [
+                    "6 tortillas",
+                    "300g frango desfiado (rotisserie)",
+                    "200g queijo cheddar ralado",
+                    "1 pimentão picado",
+                    "1 cebola picada",
+                    "Molho barbecue",
+                    "Guacamole ou creme de leite",
+                    "Óleo"
+                ],
+                instructions: [
+                    "Refogue rapidamente pimentão e cebola (3 min)",
+                    "Misture com frango e molho barbecue",
+                    "Em tortilla, coloque queijo, frango, mais queijo, cubra com outra tortilla",
+                    "Doure 2 min cada lado em frigideira",
+                    "Corte em triângulos",
+                    "Tempo total: 15 min. Sirva com guacamole"
+                ]
+            },
+            {
+                date: 24,
+                day: "Monday",
+                name: "Rabada com Agrião",
+                ingredients: [
+                    "1,5kg rabada cortada",
+                    "2 cebolas grandes",
+                    "5 dentes de alho",
+                    "3 tomates",
+                    "2 folhas de louro",
+                    "Pimenta do reino em grão",
+                    "Vinho tinto ou cerveja",
+                    "Colorau",
+                    "Agrião para servir",
+                    "Limão"
+                ],
+                instructions: [
+                    "Limpe bem a rabada e tempere com limão, alho, sal e pimenta",
+                    "Em panela de pressão, doure a rabada",
+                    "Adicione cebola, tomate, louro, colorau e vinho",
+                    "Cozinhe na pressão por 50-60 minutos até a carne desmanchar",
+                    "Ajuste o molho (deve ficar grosso e encorpado)",
+                    "Sirva com agrião fresco por cima e arroz branco"
+                ]
+            },
+            {
+                date: 25,
+                day: "Tuesday",
+                name: "Frango à Passarinho",
+                ingredients: [
+                    "1kg frango cortado em pedaços pequenos (com osso)",
+                    "6 dentes de alho amassados",
+                    "Suco de 2 limões",
+                    "Pimenta do reino",
+                    "Cominho",
+                    "Páprica",
+                    "Farinha de trigo",
+                    "Óleo para fritar",
+                    "Sal",
+                    "Limão para servir"
+                ],
+                instructions: [
+                    "Tempere o frango com alho, limão, sal, pimenta, cominho e páprica",
+                    "Deixe marinar por pelo menos 2 horas (ou de um dia para o outro)",
+                    "Escorra o frango e passe levemente na farinha",
+                    "Frite em óleo quente até dourar e ficar crocante (7-8 min)",
+                    "Escorra em papel toalha",
+                    "Sirva quente com limão, batata frita e molho de pimenta"
+                ]
+            },
+            {
+                date: 26,
+                day: "Wednesday",
+                name: "Tilápia Grelhada com Legumes",
+                ingredients: [
+                    "4 filés de tilápia",
+                    "2 abobrinhas em rodelas",
+                    "1 berinjela em rodelas",
+                    "Tomates cereja",
+                    "Alho, limão",
+                    "Azeite",
+                    "Sal, pimenta, ervas"
+                ],
+                instructions: [
+                    "Tempere o peixe com alho, limão, sal e pimenta",
+                    "Grelhe o peixe 4 min cada lado",
+                    "Ao mesmo tempo, grelhe os legumes temperados com azeite e ervas",
+                    "Disponha tudo no prato",
+                    "Regue com azeite e limão",
+                    "Tempo total: 15 min. Sirva com arroz branco"
+                ]
+            },
+            {
+                date: 28,
+                day: "Friday",
+                name: "Pernil com Farofa de Banana",
+                ingredients: [
+                    "2kg pernil suíno",
+                    "8 dentes de alho",
+                    "Suco de 2 laranjas",
+                    "Mostarda",
+                    "Mel",
+                    "Cerveja",
+                    "Para farofa: 2 xíc farinha mandioca, 4 bananas da terra, bacon, manteiga",
+                    "Sal, pimenta, cominho"
+                ],
+                instructions: [
+                    "Faça furos no pernil e insira alho. Tempere com sal, pimenta, cominho",
+                    "Misture suco de laranja, mostarda, mel e passe no pernil",
+                    "Deixe marinar de um dia para outro",
+                    "Asse a 180°C por 3-4 horas, regando com cerveja a cada 30 min",
+                    "Farofa: Frite bacon, doure bananas em rodelas, misture a farinha",
+                    "Sirva o pernil fatiado com a farofa de banana"
+                ]
+            }
+        ];
+
+        function createCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            // Create weekday headers
+            const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            weekdays.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'weekday-header';
+                header.textContent = day;
+                calendar.appendChild(header);
+            });
+            
+            // February 2026 starts on a Sunday (day 0)
+            // We need to create the calendar grid
+            const daysInFebruary = 28;
+            const firstDayOfWeek = 0; // Sunday
+            
+            // Create a map of meals by date
+            const mealsByDate = {};
+            meals.forEach((meal, index) => {
+                mealsByDate[meal.date] = { ...meal, index };
+            });
+            
+            // Skip days (Thursdays only now)
+            const skipDays = {
+                6: 'Thursday',
+                13: 'Thursday',
+                20: 'Thursday',
+                27: 'Thursday'
+            };
+            
+            // Day names in Portuguese (short)
+            const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            
+            // Create calendar days
+            for (let day = 1; day <= daysInFebruary; day++) {
+                // Calculate day of week (Feb 1, 2026 is Sunday = 0)
+                const dayOfWeek = (day - 1) % 7;
+                const dayName = dayNames[dayOfWeek];
+                
+                const card = document.createElement('div');
+                
+                if (skipDays[day]) {
+                    // Skip day
+                    card.className = 'day-card skip-day';
+                    card.innerHTML = `
+                        <div class="day-number">${day}<span class="day-label">${dayName}</span></div>
+                        <div class="skip-label">Eat out</div>
+                    `;
+                } else if (mealsByDate[day]) {
+                    // Has a meal
+                    const meal = mealsByDate[day];
+                    card.className = 'day-card';
+                    card.innerHTML = `
+                        <div class="day-number">${day}<span class="day-label">${dayName}</span></div>
+                        <div class="meal-name">${meal.name}</div>
+                        <button class="view-recipe" onclick="showRecipe(${meal.index})">Ver Receita</button>
+                    `;
+                } else {
+                    // Regular day with meal (shouldn't happen with our data)
+                    card.className = 'day-card';
+                    card.innerHTML = `
+                        <div class="day-number">${day}<span class="day-label">${dayName}</span></div>
+                    `;
+                }
+                
+                calendar.appendChild(card);
+            }
+        }
+
+        function showRecipe(index) {
+            const meal = meals[index];
+            const modal = document.getElementById('recipeModal');
+            const content = document.getElementById('recipeContent');
+            
+            content.innerHTML = `
+                <h2 class="recipe-title">${meal.name}</h2>
+                
+                <div class="recipe-section">
+                    <h3>🛒 Ingredientes</h3>
+                    <ul>
+                        ${meal.ingredients.map(ing => `<li>${ing}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="recipe-section">
+                    <h3>👨‍🍳 Modo de Preparo</h3>
+                    <ol>
+                        ${meal.instructions.map(inst => `<li>${inst}</li>`).join('')}
+                    </ol>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('recipeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Initialize calendar
+        createCalendar();
+    </script>
+</body>
+</html>
